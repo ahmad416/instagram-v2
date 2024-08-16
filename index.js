@@ -32,23 +32,31 @@ app.get('/go/:encodedUrl', (req, res) => {
     const decodedUrl = Buffer.from(encodedUrl, 'base64').toString('ascii');
 
     const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <script>
-        (function() {
-          var redirectUrl = "${decodedUrl}";
-          window.location.replace(redirectUrl);
-        })();
-      </script>
-    </head>
-    <body>
-      <p>Redirecting to ${decodedUrl}...</p>
-      <p>If you are not redirected, <a href="${decodedUrl}">click here</a>.</p>
-    </body>
-    </html>
-  `;
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="1;url=${decodedUrl}">
+    <script>
+      (function() {
+        var redirectUrl = "${decodedUrl}";
+        var schemes = ['googlechrome://', 'firefox://', 'browser://', 'https://'];
+        function tryScheme(index) {
+          if (index >= schemes.length) return;
+          window.location.href = schemes[index] + redirectUrl.replace(/^https?:\/\//, '');
+          setTimeout(function() {
+            tryScheme(index + 1);
+          }, 100);
+        }
+        tryScheme(0);
+      })();
+    </script>
+  </head>
+  <body>
+    <p>Redirecting...</p>
+  </body>
+</html>
+`;
 
     res.send(html);
 });
