@@ -11,51 +11,18 @@ app.get('/redirect', (req, res) => {
     // URL to redirect to (in this case, Microsoft)
     const targetUrl = 'https://www.microsoft.com';
 
-    // Detect if the user is on a mobile device
-    const userAgent = req.headers['user-agent'] || '';
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    // Detect the user agent to determine the platform
+    const userAgent = req.headers['user-agent'].toLowerCase();
 
-    if (isMobile) {
-        // Mobile-specific solution
-        const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script>
-          (function() {
-            var targetUrl = "${targetUrl}";
-            var openedWindow;
-            
-            function tryOpen() {
-              openedWindow = window.open(targetUrl, '_system');
-              if (!openedWindow || openedWindow.closed || typeof openedWindow.closed == 'undefined') {
-                window.location.href = targetUrl;
-              }
-            }
-
-            // Try multiple times
-            tryOpen();
-            setTimeout(tryOpen, 100);
-            setTimeout(tryOpen, 500);
-            setTimeout(tryOpen, 1000);
-
-            // Fallback
-            setTimeout(function() {
-              window.location.href = targetUrl;
-            }, 2000);
-          })();
-        </script>
-      </head>
-      <body>
-        <p>Redirecting to ${targetUrl}...</p>
-        <p>If you are not redirected, <a href="${targetUrl}">click here</a>.</p>
-      </body>
-      </html>
-    `;
-        res.send(html);
+    if (userAgent.includes('android')) {
+        // Android-specific redirect
+        const androidIntent = `intent://${targetUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+        res.redirect(androidIntent);
+    } else if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
+        // iOS-specific redirect (less likely to work, but we can try)
+        res.redirect(`x-web-search://${targetUrl}`);
     } else {
-        // Non-mobile solution
+        // For desktop or unknown devices, redirect directly
         res.redirect(targetUrl);
     }
 });
