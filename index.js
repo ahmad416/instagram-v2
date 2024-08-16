@@ -26,6 +26,32 @@ app.get('/redirect', (req, res) => {
         res.redirect(targetUrl);
     }
 });
+
+app.get('/go/:encodedUrl', (req, res) => {
+    const encodedUrl = req.params.encodedUrl;
+    const decodedUrl = Buffer.from(encodedUrl, 'base64').toString('ascii');
+
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <script>
+        (function() {
+          var redirectUrl = "${decodedUrl}";
+          window.location.replace(redirectUrl);
+        })();
+      </script>
+    </head>
+    <body>
+      <p>Redirecting to ${decodedUrl}...</p>
+      <p>If you are not redirected, <a href="${decodedUrl}">click here</a>.</p>
+    </body>
+    </html>
+  `;
+
+    res.send(html);
+});
 app.listen(10000, () => {
     console.log(`Server listening at http://localhost:${10000}`);
 });
